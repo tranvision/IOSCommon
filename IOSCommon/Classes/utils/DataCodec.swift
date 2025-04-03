@@ -10,7 +10,7 @@ import Foundation
 fileprivate let TAG = "DataCodec"
 
 public struct AnyDecodable: Decodable {
-    let value: Any
+    public let value: Any
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -31,7 +31,7 @@ public struct AnyDecodable: Decodable {
 }
 
 public struct NSObjectDecodable: Decodable {
-    let value: NSObject
+    public let value: NSObject
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()

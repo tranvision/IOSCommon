@@ -40,6 +40,4 @@ ios common lib
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
   s.dependency 'KeychainSwift'
-  s.dependency 'FirebaseAnalytics'
-  s.dependency 'FirebaseRemoteConfig'
 end
