@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 fileprivate class LogFileWrapper {
     var fileHandle: FileHandle?
@@ -24,26 +25,32 @@ public final class LogUtil {
     private static var fileEnabled = false
     private static var logFile: LogFileWrapper?
     private static var logFileURL: URL?
+    private static var _logger: OSLog?
+    private static var logger: OSLog {
+        get {
+            if _logger == nil {
+                let bundleId = Bundle.main.bundleIdentifier!
+                _logger = OSLog(subsystem: bundleId, category: "native")
+            }
+            return _logger!
+        }
+    }
     private static var internalMode: Bool {
         get {
             BuildConfig.shared.isInternal
         }
     }
     
-    public static func d<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs("[\(tag)]💡", objects) }
-    public static func i<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs("[\(tag)]🟢", objects) }
-    public static func e<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs("[\(tag)]🔴", objects) }
-    public static func w<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs("[\(tag)]🟡", objects) }
+    public static func d<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs(.debug, "[\(tag)]💡", objects) }
+    public static func i<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs(.info, "[\(tag)]🟢", objects) }
+    public static func e<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs(.error, "[\(tag)]🔴", objects) }
+    public static func w<T: CustomStringConvertible>(tag: String, _ objects: T...) { printArgs(.info, "[\(tag)]🟡", objects) }
     
     public static func enableFileLog(_ flag: Bool) {
         fileEnabled = flag
     }
     
-    public static func printStrs(prefix: String, _ args: [String]) {
-        printArgs(prefix, args)
-    }
-    
-    private static func printArgs<T: CustomStringConvertible>(_ prefix: String, _ objects: T...) {
+    private static func printArgs<T: CustomStringConvertible>(_ logLevel: OSLogType, _ prefix: String, _ objects: T...) {
         let date = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss.SSS" // 指定日期格式为 时:分:秒.毫秒
@@ -56,11 +63,8 @@ public final class LogUtil {
             return
         }
         
-        output(text: "\(time) \(prefix) \(str)")
-    }
-    
-    private static func output(text: String) {
-        print(text)
+        let text = "\(time) \(prefix) \(str)"
+        os_log(logLevel, log: logger, "%@", text)
         if fileEnabled || internalMode {
             writeToFile(text)
         }
