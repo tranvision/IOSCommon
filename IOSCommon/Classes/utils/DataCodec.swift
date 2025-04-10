@@ -77,11 +77,11 @@ public struct AnyEncodable: Encodable {
 }
 
 public class DataCodec {
-    public static func map2jstr(_ map: [String: Any])-> String {
+    public static func dict2jstr(_ map: [String: Any])-> String {
         do {
-            let encodableDict = map.mapValues { AnyEncodable($0) }
-            let jsonData = try JSONEncoder().encode(encodableDict)
+            let jsonData = try JSONSerialization.data(withJSONObject: map, options: .withoutEscapingSlashes)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
+                //return jsonString.replacingOccurrences(of: "\\\"", with: "\"")
                 return jsonString
             }
         } catch {
