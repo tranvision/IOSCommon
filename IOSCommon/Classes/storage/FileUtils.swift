@@ -34,6 +34,22 @@ fileprivate let TAG = "FileUtils"
 
 public class FileUtils: NSObject {
     
+    public class func getFileSize(atPath path: String) -> UInt64 {
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: path)
+            if let fileSize = fileAttributes[.size] as? UInt64 {
+                return fileSize
+            } else {
+                return 0
+            }
+        } catch {
+            LogUtil.e(tag: "FileUtils", "Error: \(error)")
+            return 0
+        }
+    }
+
+    
+    
     // MARK: - Image IO
     
     public class func saveImage(image: UIImage, imageType: ImageType, savePos: FileSavePos, fileName: String?, compressionQuality: CGFloat = 0.8, callback: ((Bool, URL?)-> Void)?) {
