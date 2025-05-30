@@ -71,11 +71,12 @@ public final class LogUtil {
     }
     
     private static func writeToFile(_ str: String) {
+        
         if logFileURL == nil {
             let dateFmt = DateFormatter()
-            dateFmt.dateFormat = "log_YYYYMMdd_native"
+            dateFmt.dateFormat = "yyyyMMdd"
             let dateStr = dateFmt.string(from: Date())
-            self.logFileURL = UrlUtils.getTmpUrl().appendingPathComponent("\(dateStr).log")
+            self.logFileURL = UrlUtils.getTmpUrl().appendingPathComponent("log_\(dateStr)_native.log")
         }
         
         guard let url = logFileURL else {
