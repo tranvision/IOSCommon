@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Photos
 
 public enum FileSavePos: Int {
     case tmp = 0
@@ -93,94 +92,6 @@ public class FileUtils: NSObject {
                 contin.resume(returning: url)
             }
         }
-    }
-    
-    public class func saveToGallery(album: PHAssetCollection?, type: MimeType, atURL url: URL, complete: @escaping ((Error?) -> Void)) {
-        
-        let callback: ((Bool, (any Error)?) -> Void) = { (success, error) in
-            if !success {
-                LogUtil.e(tag: "FileUtils", "save err: \(String(describing: error))")
-            }
-            complete(success ? nil : error)
-        }
-        
-        // 图库默认位置的情况
-        if album == nil {
-            if type == .image {
-                PHPhotoLibrary.shared().performChanges({ PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url) }, completionHandler: callback)
-            } else {
-                PHPhotoLibrary.shared().performChanges({ PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url) }, completionHandler: callback)
-            }
-        } else {
-            
-            PHPhotoLibrary.shared().performChanges({
-                if let albumChangeRequest = PHAssetCollectionChangeRequest(for: album!) {
-                    let assetChangeRequest = type == .image ?
-                    PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url) :
-                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-                    
-                    let assetPlaceholder = assetChangeRequest?.placeholderForCreatedAsset
-                    if let assetPlaceholder = assetPlaceholder {
-                        let enumeration: NSArray = [assetPlaceholder]
-                        albumChangeRequest.addAssets(enumeration)
-                    }
-                }
-            }, completionHandler: callback)
-        } // if
-    }
-    
-    public class func saveToGalleryAsync(album: PHAssetCollection?, type: MimeType, atURL url: URL) async -> Error? {
-        await withCheckedContinuation { contin in
-            saveToGallery(album: album, type: type, atURL: url, complete: {
-                contin.resume(returning: $0)
-            })
-        }
-    }
-    
-    public class func saveToAlbum(_ album: String, type: MimeType, atURL url: URL) async -> Error? {
-        if !FileUtils.isAlbumExists(albumName: album) {
-            let albumErr = await FileUtils.createAlbumAsync(named: album)
-            if albumErr != nil {
-                return albumErr
-            }
-        }
-        
-         let fetchOptions = PHFetchOptions()
-         fetchOptions.predicate = NSPredicate(format: "title = %@", album)
-         let collections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-         
-        guard let album = collections.firstObject else {
-            return FileError.createAlbum("failed to create album named \(album)")
-        }
-        
-        return await saveToGalleryAsync(album: album, type: type, atURL: url)
-    }
-    
-    public class func createAlbum(named albumName: String, callback: @escaping (Error?)-> Void) {
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: albumName)
-        }) {success, error in
-            if let error = error {
-                LogUtil.e(tag: TAG, "createAlbum err: \(error.localizedDescription)")
-            }
-            callback(success ? nil : error)
-        }
-    }
-
-    public class func createAlbumAsync(named albumName: String) async -> Error? {
-        await withCheckedContinuation { contin in
-            createAlbum(named: albumName, callback: {
-                contin.resume(returning: $0)
-            })
-        }
-    }
-    
-    public class func isAlbumExists(albumName: String) -> Bool {
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.predicate = NSPredicate(format: "title = %@", albumName)
-        
-        let collections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-        return collections.count > 0
     }
     
     public class func loadImageFromRes(relativePath: String, callback: @escaping (UIImage?)-> Void) {
