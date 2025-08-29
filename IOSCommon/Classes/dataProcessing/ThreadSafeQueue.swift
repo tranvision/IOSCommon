@@ -68,4 +68,51 @@ public final class ThreadSafeQueue<T>
         lock.unlock()
         return empty
     }
+
+    /// 线程安全获取队列元素个数
+    public func count() -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        var node = headNode.next
+        var total = 0
+        while node != nil {
+            total += 1
+            node = node?.next
+        }
+        return total
+    }
+
+    /// 线程安全地删除队列尾部的最新N个元素
+    /// - Parameter count: 要删除的元素数量
+    /// - Returns: 实际删除的数量
+    @discardableResult
+    public func removeLast(_ count: Int) -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        
+        // 统计当前队列元素数量
+        var node = headNode.next
+        var total = 0
+        while node != nil {
+            total += 1
+            node = node?.next
+        }
+        
+        // 如果数量不足，直接返回0
+        if count <= 0 || total < count {
+            return 0
+        }
+        
+        // 找到新的tailNode（倒数第N+1个节点）
+        var prev: QueueNode<Element>? = headNode
+        var steps = total - count
+        for _ in 0..<steps {
+            prev = prev?.next
+        }
+        // 断开链表
+        prev?.next = nil
+        tailNode = prev!
+        return count
+    }
+
 }
