@@ -15,6 +15,7 @@ final public class BuildConfig {
     public var isInternal: Bool { _isInternal }
     public var version: String { verStr }
     public var market: String { "iOS AppStore" }
+    public var appStoreId: String = "0"
     
     private init() {
         if let infoDict = Bundle.main.infoDictionary {
@@ -22,6 +23,10 @@ final public class BuildConfig {
             
             _isInternal = Int(internalStr) == 1
             verStr = infoDict["CFBundleShortVersionString"] as! String
+            
+            if let storeId = infoDict["APPSTORE_ID"] {
+                appStoreId = storeId as! String
+            }
         }
     }
     
